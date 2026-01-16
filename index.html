@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>〇〇のスロットゲーム</title>
+    <style>
+        body { background: #333; color: white; text-align: center; font-family: sans-serif; }
+        #game-container { max-width: 500px; margin: 20px auto; border: 5px solid #555; padding: 20px; border-radius: 15px; background: #222; }
+        
+        /* リールエリア */
+        .reels { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .reel { width: 100px; height: 100px; border: 4px solid #fff; background: #fff; color: #000; 
+                font-size: 50px; line-height: 100px; border-radius: 10px; overflow: hidden; }
+
+        /* 操作パネル */
+        .stats { font-size: 1.2rem; margin-bottom: 15px; }
+        button { padding: 10px 40px; font-size: 1.5rem; cursor: pointer; background: #ff4757; color: white; border: none; border-radius: 5px; }
+        button:disabled { background: #555; cursor: not-allowed; }
+
+        /* 結果表示 */
+        #message { height: 1.5em; margin: 10px 0; font-weight: bold; color: #f1c40f; }
+        #win-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                      background: rgba(255,215,0,0.8); color: #000; justify-content: center; 
+                      align-items: center; font-size: 3rem; flex-direction: column; }
+        
+        .how-to { font-size: 0.8rem; color: #aaa; margin-top: 20px; text-align: left; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>〇〇のスロット</h1>
+    <div class="stats">所持コイン: <span id="coin-count">100</span></div>
+    
+    <div class="reels">
+        <div id="reel1" class="reel">?</div>
+        <div id="reel2" class="reel">?</div>
+        <div id="reel3" class="reel">?</div>
+    </div>
+
+    <div id="message"></div>
+    <button id="spin-btn" onclick="startSpin()">SPIN!</button>
+
+    <div class="how-to">
+        <p>【遊び方】<br>
+        1. SPINボタンでリールが回転します（コスト：10コイン）<br>
+        2. 3秒後に停止し、3つの絵柄が揃えば当たり！<br>
+        3. 0コインになるとゲームオーバーです。</p>
+    </div>
+</div>
+
+<div id="win-screen" onclick="this.style.display='none'">
+    <div>JACKPOT!!</div>
+    <div style="font-size: 1.5rem;">クリックで戻る</div>
+</div>
+
+<script>
+    // 設定
+    const symbols = ['🍎', '🔔', '💎', '🍒', '🎰', '🍋']; // 独自画像を使う場合はURLの配列にする
+    let coins = 100;
+    let isSpinning = false;
+
+    function startSpin() {
+        if (coins < 10 || isSpinning) return;
+        
+        // 支払い
+        coins -= 10;
+        updateUI();
+        isSpinning = true;
+        document.getElementById('spin-btn').disabled = true;
+        document.getElementById('message').innerText = "回転中...";
+
+        let spinCount = 0;
+        const interval = setInterval(() => {
+            // 200msごとにランダム表示（アニメーション演出）
+            document.getElementById('reel1').innerText = symbols[Math.floor(Math.random() * symbols.length)];
+            document.getElementById('reel2').innerText = symbols[Math.floor(Math.random() * symbols.length)];
+            document.getElementById('reel3').innerText = symbols[Math.floor(Math.random() * symbols.length)];
+            
+            spinCount += 200;
+            if (spinCount >= 3000) { // 3秒後に停止
+                clearInterval(interval);
+                stopSpin();
+            }
+        }, 200);
+    }
+
+    function stopSpin() {
+        // 最終結果の決定
+        const res1 = symbols[Math.floor(Math.random() * symbols.length)];
+        const res2 = symbols[Math.floor(Math.random() * symbols.length)];
+        const res3 = symbols[Math.floor(Math.random() * symbols.length)];
+
+        document.getElementById('reel1').innerText = res1;
+        document.getElementById('reel2').innerText = res2;
+        document.getElementById('reel3').innerText = res3;
+
+        checkResult(res1, res2, res3);
+    }
+
+    function checkResult(r1, r2, r3) {
+        isSpinning = false;
+        document.getElementById('spin-btn').disabled = false;
+
+        if (r1 === r2 && r2 === r3) {
+            const winAmount = 100; // 当たりの配当
+            coins += winAmount;
+            document.getElementById('message').innerText = `当たり！ ${winAmount}コイン獲得！`;
+            showWinScreen();
+        } else {
+            document.getElementById('message').innerText = "ハズレ";
+        }
+
+        updateUI();
+
+        if (coins <= 0) {
+            alert("コインがなくなりました。ゲーム終了！");
+            document.getElementById('spin-btn').disabled = true;
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('coin-count').innerText = coins;
+    }
+
+    function showWinScreen() {
+        const winScreen = document.getElementById('win-screen');
+        winScreen.style.display = 'flex';
+    }
+</script>
+
+</body>
+</html>
